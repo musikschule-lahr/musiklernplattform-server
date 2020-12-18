@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AgeRange {
+  id       Int        @id @default(autoincrement())
+  name     String     @unique
+  metaData MetaData[]
+}
+
+model Board {
+  id      Int    @id @default(autoincrement())
+  userId  Int?   @unique
+  groupId Int?   @unique
+  group   Group? @relation(fields: [groupId], references: [id])
+  user    User?  @relation(fields: [userId], references: [id])
+  lanes   Lane[]
+}
+
+model Card {
+  id          Int        @id @default(autoincrement())
+  title       String?
+  description String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime?
+  createdBy   Int?
+  updatedBy   Int?
+  creator     User?      @relation("Card_createdByToUser", fields: [createdBy], references: [id])
+  lastEditor  User?      @relation("Card_updatedByToUser", fields: [updatedBy], references: [id])
+  cardLanes   CardLane[]
+  libElements LibElement[] @relation("CardToLibElement", references: [id])
+
+  @@index([createdBy], name: "card_createdBy")
+  @@index([updatedBy], name: "card_updatedBy")
+}
+
+model CardLane {
+  cardId  Int
+  laneId  Int
+  sorting Int?
+  card    Card @relation(fields: [cardId], references: [id])
+  lane    Lane @relation(fields: [laneId], references: [id])
+
+  @@id([cardId, laneId])
+  @@index([laneId], name: "cardLane_laneId")
+}
+
+model Category {
+  id               Int        @id @default(autoincrement())
+  name             String
+  parentCategoryId Int?
+  parentCategory   Category?  @relation("CategoryToCategory_parentCategoryId", fields: [parentCategoryId], references: [id])
+  childCategories  Category[] @relation("CategoryToCategory_parentCategoryId")
+  libElements      LibElement[] @relation("CategoryToLibElement", references: [id])
+
+  @@index([parentCategoryId], name: "category_parentCategoryId")
+}
+
+model Composer {
+  id          Int        @id @default(autoincrement())
+  firstname   String?
+  lastname    String?
+  yearOfBirth Int?
+  yearOfDeath Int?
+  metaData    MetaData[]
+}
+
+model Day {
+  id          Int        @id @default(autoincrement())
+  day         Day_day?
+  sorting     Int?
+  timetableId Int?
+  timetable   Timetable? @relation(fields: [timetableId], references: [id])
+  timeslots   Timeslot[]
+
+  @@unique([day, timetableId], name: "timetableDay")
+  @@index([timetableId], name: "day_timetableId")
+}
+
+model Epoch {
+  id          Int        @id @default(autoincrement())
+  code        String     @unique
+  description String
+  metaData    MetaData[]
+}
+
+model Group {
+  id           Int           @id @default(autoincrement())
+  name         String
+  ownerId      Int?
+  matrixRoomId String?
+  owner        User?         @relation(fields: [ownerId], references: [id])
+  board        Board?
+  timeslots    Timeslot[]
+  relations    UserRelated[]
+
+  @@index([ownerId], name: "group_ownerId")
+}
+
+model Instrument {
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  icon      String?
+  instrumentGroup String?
+  playedBy    User[]        @relation("InstrumentToUser", references: [id])
+  teachedBy   User[]        @relation("InstrumentToTeacher", references: [id])
+  libElements LibElement[]  @relation("InstrumentToLibElement", references: [id])
+  relations   UserRelated[]
+}
+
+model Instrumentation {
+  id       Int        @id @default(autoincrement())
+  name     String?
+  metaData MetaData[]
+}
+
+model Interpreter {
+  id       Int        @id @default(autoincrement())
+  name     String?
+  metaData MetaData[]
+}
+
+model Key {
+  id       Int        @id @default(autoincrement())
+  name     String     @unique
+  metaData MetaData[]
+}
+
+model Lane {
+  id        Int            @id @default(autoincrement())
+  title     String?
+  sorting   Int?
+  boardId   Int?
+  laneType  Lane_laneType?
+  board     Board?         @relation(fields: [boardId], references: [id])
+  cardLanes CardLane[]
+
+  @@index([boardId], name: "lane_boardId")
+}
+
+model LibElement {
+  id           Int                    @id @default(autoincrement())
+  productionNo String                 @unique
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime?
+  authorId     Int?
+  metaDataId   Int?                   @unique
+  playerPath String?   @default(uuid()) @unique
+  playerType   LibElement_playerType?
+  author       User?                  @relation(fields: [authorId], references: [id])
+  metaData     MetaData?              @relation(fields: [metaDataId], references: [id])
+  tracks       Track[]
+  categories   Category[]             @relation("CategoryToLibElement", references: [id])
+  instruments  Instrument[]           @relation("InstrumentToLibElement", references: [id])
+  cards        Card[]                 @relation("CardToLibElement", references: [id])
+
+  @@index([authorId], name: "libElement_authorId")
+}
+
+model MetaData {
+  id                Int              @id @default(autoincrement())
+  title             String?
+  shortTitle        String?
+  comment           String?
+  isInYouthTalent   Boolean?         @default(false)
+  movement          String?
+  difficultyMin     Int?
+  difficultyMax     Int?
+  coverImagePath    String?
+  tuning            Int?
+  style             String?
+  yearOfRecording   Int?
+  composerId        Int?
+  interpreterId     Int?
+  keyId             Int?
+  epochId           Int?
+  ageRangeId        Int?
+  instrumentationId Int?
+  ageRange          AgeRange?        @relation(fields: [ageRangeId], references: [id])
+  composer          Composer?        @relation(fields: [composerId], references: [id])
+  epoch             Epoch?           @relation(fields: [epochId], references: [id])
+  instrumentation   Instrumentation? @relation(fields: [instrumentationId], references: [id])
+  interpreter       Interpreter?     @relation(fields: [interpreterId], references: [id])
+  key               Key?             @relation(fields: [keyId], references: [id])
+  libElement        LibElement?
+
+  @@index([ageRangeId], name: "metaData_ageRangeId")
+  @@index([composerId], name: "metaData_composerId")
+  @@index([epochId], name: "metaData_epochId")
+  @@index([instrumentationId], name: "metaData_instrumentationId")
+  @@index([interpreterId], name: "metaData_interpreterId")
+  @@index([keyId], name: "metaData_keyId")
+}
+
+model Plan {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+}
+
+model School {
+  id          Int    @id @default(autoincrement())
+  name        String
+  address     String
+  zip         String
+  city        String
+  officeUsers User[]
+}
+
+model Staff {
+  id   Int     @id @default(autoincrement())
+  name String?
+}
+
+model Timeslot {
+  id        Int       @id @default(autoincrement())
+  time      DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+  studentId Int?
+  groupId   Int?
+  dayId     Int?
+  day       Day?      @relation(fields: [dayId], references: [id])
+  group     Group?    @relation(fields: [groupId], references: [id])
+  user      User?     @relation(fields: [studentId], references: [id])
+
+  @@index([dayId], name: "timeslot_dayId")
+  @@index([groupId], name: "timeslot_groupId")
+  @@index([studentId], name: "timeslot_studentId")
+}
+
+model Timetable {
+  id     Int   @id @default(autoincrement())
+  userId Int?  @unique
+  user   User? @relation(fields: [userId], references: [id])
+  days   Day[]
+}
+
+model Track {
+  id           Int         @id @default(autoincrement())
+  title        String
+  isVideo      Boolean?    @default(false)
+  filePath     String?
+  sorting      Int?
+  libElementId Int?
+  libElement   LibElement? @relation(fields: [libElementId], references: [id])
+
+  @@index([libElementId], name: "track_libElementId")
+}
+
+model User {
+  id                  Int           @id @default(autoincrement())
+  firstname           String
+  lastname            String
+  username            String        @unique
+  mail                String?       @unique
+  phone               String?
+  birthyear           Int?
+  isActive            Boolean?      @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime?
+  lastLogin           DateTime?
+  keycloakUserId      String?       @unique
+  matrixUserId        String?
+  schoolId            Int?
+  board               Board?
+  createdCards        Card[]        @relation("Card_createdByToUser")
+  updatedCards        Card[]        @relation("Card_updatedByToUser")
+  administratedGroups Group[]
+  createdLibElements  LibElement[]
+  timeslots           Timeslot[]
+  timetable           Timetable?
+  relatedTo           UserRelated[] @relation("UserToUserRelated_relatedUserId")
+  relatedBy           UserRelated[] @relation("UserToUserRelated_userId")
+  playedInstruments   Instrument[]  @relation("InstrumentToUser",references: [id])
+  teachedInstruments  Instrument[]  @relation("InstrumentToTeacher",references: [id])
+  school              School?       @relation(fields: [schoolId], references: [id])
+}
+
+model UserRelated {
+  id              Int                   @id @default(autoincrement())
+  userId          Int?
+  userRole        UserRelated_userRole?
+  relatedUserId   Int?
+  relatedUserRole UserRelated_userRole?
+  instrumentId    Int?
+  groupId         Int?
+  confirmedAt     DateTime?
+  matrixRoomId    String?
+  group           Group?                @relation(fields: [groupId], references: [id])
+  instrument      Instrument?           @relation(fields: [instrumentId], references: [id])
+  relatedUser     User?                 @relation("UserToUserRelated_relatedUserId", fields: [relatedUserId], references: [id])
+  user            User?                 @relation("UserToUserRelated_userId", fields: [userId], references: [id])
+
+  @@unique([userId, userRole, relatedUserId, relatedUserRole, instrumentId, groupId], name: "userRelation")
+  @@index([groupId], name: "userRelated_groupId")
+  @@index([instrumentId], name: "userRelated_instrumentId")
+  @@index([relatedUserId], name: "userRelated_relatedUserId")
+  @@index([userId], name: "userRelated_userId")
+}
+
+enum Day_day {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
+}
+
+enum Lane_laneType {
+  ToDo
+  Done
+  Other
+}
+
+enum LibElement_playerType {
+  Korrepetition
+  Ensemble_Band
+  Solo
+}
+
+enum UserRelated_userRole {
+  Student
+  Teacher
+  Parent
+  Office
+}

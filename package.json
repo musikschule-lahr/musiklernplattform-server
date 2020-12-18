@@ -1,0 +1,48 @@
+{
+  "name": "musiklernplattform-server",
+  "version": "0.0.1",
+  "description": "Implementation server.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:watch": "nodemon src/index.js",
+    "keycloak:grant": "node etc/scripts/obtainKeycloakToken.js",
+    "keycloak:admin": "cd etc/keycloak-admin-server && npm run start",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Sinusquadrat GmbH"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@graphql-tools/load-files": "^6.2.4",
+    "@graphql-tools/merge": "^6.2.4",
+    "@prisma/client": "^2.10.1",
+    "apollo-datasource": "^0.7.0",
+    "apollo-server": "^2.18.2",
+    "apollo-server-express": "^2.18.2",
+    "axios": "^0.19.2",
+    "casual": "^1.6.2",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "graphql": "^15.0.0",
+    "graphql-iso-date": "^3.6.1",
+    "graphql-middleware": "^4.0.2",
+    "graphql-scalars": "^1.2.7",
+    "graphql-shield": "^7.2.6",
+    "keycloak-connect": "9.0.2",
+    "keycloak-connect-graphql": "^0.4.0",
+    "node-fetch": "^2.6.1",
+    "ramda": "^0.27.0",
+    "subscriptions-transport-ws": "^0.9.18"
+  },
+  "private": true,
+  "devDependencies": {
+    "@prisma/cli": "^2.10.1",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.2",
+    "keycloak-request-token": "^0.1.0",
+    "nodemon": "^2.0.3"
+  }
+}
